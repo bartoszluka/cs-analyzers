@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace CustomAnalyzers;
+namespace MissingAnalyzers;
 
 #pragma warning disable RS1041 // Compiler extensions should be implemented in assemblies targeting netstandard2.0
 [DiagnosticAnalyzer(LanguageNames.CSharp)]

@@ -6,7 +6,18 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <Version>0.1.0</Version>
+    <Authors>Bartosz Łuka</Authors>
+    <PackageDescription>Analyzers that should be in the base dotnet compiler</PackageDescription>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageTags>analyzer;linter</PackageTags>
+    <PackageProjectUrl>https://github.com/bartoszluka/cs-analyzers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/bartoszluka/cs-analyzers.git</RepositoryUrl>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="LICENSE" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
