@@ -6,12 +6,10 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MissingAnalyzers;
 
-#pragma warning disable RS1041 // Compiler extensions should be implemented in assemblies targeting netstandard2.0
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-#pragma warning restore RS1041 // Compiler extensions should be implemented in assemblies targeting netstandard2.0
 public class UnusedVariableAnalyzer : DiagnosticAnalyzer
 {
-    public static readonly DiagnosticDescriptor Rule = new(
+    public static readonly DiagnosticDescriptor UnusedVariableDescriptor = new(
         id: "UVA001",
         title: "Variable assigned but never used",
         messageFormat: "Variable '{0}' is assigned but never used",
@@ -20,44 +18,42 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true
     );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    private static Diagnostic UnusedVariableDiagnostic(Location location, string variableName) =>
+        Diagnostic.Create(UnusedVariableDescriptor, location, variableName);
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+        ImmutableArray.Create(UnusedVariableDescriptor);
 
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeMethod, SyntaxKind.MethodDeclaration);
+        context.RegisterSyntaxNodeAction(ReportUnusedVariables, SyntaxKind.VariableDeclaration);
     }
 
-    private static void AnalyzeMethod(SyntaxNodeAnalysisContext context)
+    private static void ReportUnusedVariables(SyntaxNodeAnalysisContext context)
     {
-        if (context.Node is not MethodDeclarationSyntax method)
+        if (context.Node is not VariableDeclarationSyntax declaration)
         {
             return;
         }
 
-        var declarations = method
-            .DescendantNodes()
-            .OfType<VariableDeclarationSyntax>()
-            .SelectMany(a => a.Variables)
-            .ToList();
-
-        foreach (var declaration in declarations)
+        foreach (var variable in declaration.Variables)
         {
-            var variableName = declaration.Identifier.ValueText;
+            var variableName = variable.Identifier.ValueText;
 
-            if (IsInUsingStatement(declaration))
+            if (IsInUsingStatement(variable))
             {
                 continue;
             }
 
-            if (IsUsed(method, variableName))
+            if (IsUsed(variable, variableName))
             {
                 continue;
             }
 
-            var location = declaration.Identifier.GetLocation();
-            context.ReportDiagnostic(Diagnostic.Create(Rule, location, variableName));
+            var location = variable.Identifier.GetLocation();
+            context.ReportDiagnostic(UnusedVariableDiagnostic(location, variableName));
         }
     }
 
@@ -74,8 +70,10 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
         return localDeclaration.UsingKeyword != default;
     }
 
-    private static bool IsUsed(SyntaxNode method, string variableName)
+    private static bool IsUsed(VariableDeclaratorSyntax variable, string variableName)
     {
-        return method.DescendantNodes().OfType<IdentifierNameSyntax>().Any(id => id.Identifier.ValueText == variableName);
+        var scope = variable.FirstAncestorOrSelf<BlockSyntax>();
+
+        return scope.DescendantNodes().OfType<IdentifierNameSyntax>().Any(id => id.Identifier.ValueText == variableName);
     }
 }
