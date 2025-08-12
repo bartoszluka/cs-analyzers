@@ -73,6 +73,10 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
     private static bool IsUsed(VariableDeclaratorSyntax variable, string variableName)
     {
         var scope = variable.FirstAncestorOrSelf<BlockSyntax>();
+        if (scope is null)
+        {
+            return true;
+        }
 
         return scope.DescendantNodes().OfType<IdentifierNameSyntax>().Any(id => id.Identifier.ValueText == variableName);
     }
