@@ -42,14 +42,14 @@ choose the approach that suits you best.
 This project is on [NuGet](https://www.nuget.org/packages/MissingAnalyzers), so you can add it through `dotnet` CLI:
 
 ```sh
-dotnet add MissingAnalyzers
+dotnet add package MissingAnalyzers
 ```
 
 or add this to your `.csproj` file:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="MissingAnalyzers" Version="0.2.0" />
+  <PackageReference Include="MissingAnalyzers" Version="0.2.1" />
 </ItemGroup>
 ```
 
@@ -60,7 +60,7 @@ you can add this to the `Directory.Packages.props` file
 
 ```xml
 <ItemGroup>
-  <PackageVersion Include="MissingAnalyzers" Version="0.2.0" />
+  <PackageVersion Include="MissingAnalyzers" Version="0.2.1" />
 </ItemGroup>
 ```
 
@@ -79,4 +79,5 @@ and this to `Directory.Build.props` file
 - [x] fill `AnalyzerReleases.Shipped.md` (whatever those are)
 - [x] maybe support versions older than `net8.0`? `netstandard2.0` supported
 - [ ] fix a bug with shadowing names in lambdas
+- [ ] add tests
 - [ ] add another analyzer if I see another problem
