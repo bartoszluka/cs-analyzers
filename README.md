@@ -49,7 +49,7 @@ or add this to your `.csproj` file:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="MissingAnalyzers" Version="0.3.0" />
+  <PackageReference Include="MissingAnalyzers" Version="0.4.0" />
 </ItemGroup>
 ```
 
@@ -60,7 +60,7 @@ you can add this to the `Directory.Packages.props` file
 
 ```xml
 <ItemGroup>
-  <PackageVersion Include="MissingAnalyzers" Version="0.3.0" />
+  <PackageVersion Include="MissingAnalyzers" Version="0.4.0" />
 </ItemGroup>
 ```
 
@@ -78,6 +78,6 @@ and this to `Directory.Build.props` file
 - [x] publish the package on NuGet
 - [x] fill `AnalyzerReleases.Shipped.md` (whatever those are)
 - [x] maybe support versions older than `net8.0`? `netstandard2.0` supported
-- [ ] fix a bug with shadowing names in lambdas
+- [x] fix a bug with shadowing names in lambdas
 - [ ] add tests
 - [ ] add another analyzer if I see another problem

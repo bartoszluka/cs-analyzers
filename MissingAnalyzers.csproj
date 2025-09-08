@@ -8,7 +8,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Authors>Bartosz Łuka</Authors>
     <PackageDescription>Analyzers that should be in the base dotnet compiler</PackageDescription>
     <PackageReadmeFile>README.md</PackageReadmeFile>
