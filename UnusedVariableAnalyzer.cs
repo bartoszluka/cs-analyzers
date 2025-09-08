@@ -40,12 +40,15 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(ReportUnusedVariables, SyntaxKind.VariableDeclaration);
-        context.RegisterSyntaxNodeAction(ReportUnusedVariables2, SyntaxKind.ParenthesizedLambdaExpression);
-        context.RegisterSyntaxNodeAction(ReportUnusedVariables3, SyntaxKind.SimpleLambdaExpression);
+        context.RegisterSyntaxNodeAction(ReportUnusedVariablesInBlocks, SyntaxKind.VariableDeclaration);
+        context.RegisterSyntaxNodeAction(
+            ReportUnusedVariablesInParenthesizedLambdas,
+            SyntaxKind.ParenthesizedLambdaExpression
+        );
+        context.RegisterSyntaxNodeAction(ReportUnusedVariablesInSimpleLambdas, SyntaxKind.SimpleLambdaExpression);
     }
 
-    private static void ReportUnusedVariables(SyntaxNodeAnalysisContext context)
+    private static void ReportUnusedVariablesInBlocks(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not VariableDeclarationSyntax declaration)
         {
@@ -54,8 +57,6 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
 
         foreach (var variable in declaration.Variables)
         {
-            var variableName = variable.Identifier.ValueText;
-
             if (IsInUsingStatement(variable))
             {
                 continue;
@@ -67,7 +68,7 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
             }
 
             var location = variable.Identifier.GetLocation();
-            context.ReportDiagnostic(UnusedVariableDiagnostic(location, variableName));
+            context.ReportDiagnostic(UnusedVariableDiagnostic(location, variable.Identifier.ValueText));
         }
     }
 
@@ -113,20 +114,14 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
         //     .Select(name => name.Identifier.ValueText)
         //     .ToImmutableHashSet();
 
-        foreach (var identifier in allIdentifiersInScope)
+        return allIdentifiersInScope.Any(identifier =>
         {
             var identifierSymbol = context.SemanticModel.GetSymbolInfo(identifier).Symbol;
-
-            if (SymbolEqualityComparer.IncludeNullability.Equals(variableSymbol, identifierSymbol))
-            {
-                return true;
-            }
-        }
-
-        return false;
+            return SymbolEqualityComparer.Default.Equals(variableSymbol, identifierSymbol);
+        });
     }
 
-    private static void ReportUnusedVariables2(SyntaxNodeAnalysisContext context)
+    private static void ReportUnusedVariablesInParenthesizedLambdas(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not ParenthesizedLambdaExpressionSyntax parenthesizedLambda)
         {
@@ -135,26 +130,23 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
 
         foreach (var parameter in parenthesizedLambda.ParameterList.Parameters)
         {
-            var variableName = parameter.Identifier.ValueText;
-
             if (IsLambdaParameterUsed(context, parameter))
             {
                 continue;
             }
 
             var location = parameter.Identifier.GetLocation();
-            context.ReportDiagnostic(UnusedVariableDiagnostic(location, variableName));
+            context.ReportDiagnostic(UnusedVariableDiagnostic(location, parameter.Identifier.ValueText));
         }
     }
 
-    private static void ReportUnusedVariables3(SyntaxNodeAnalysisContext context)
+    private static void ReportUnusedVariablesInSimpleLambdas(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not SimpleLambdaExpressionSyntax lambda)
         {
             return;
         }
         var parameter = lambda.Parameter;
-        var variableName = parameter.Identifier.ValueText;
 
         if (IsLambdaParameterUsed(context, parameter))
         {
@@ -162,7 +154,7 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
         }
 
         var location = parameter.Identifier.GetLocation();
-        context.ReportDiagnostic(UnusedVariableDiagnostic(location, variableName));
+        context.ReportDiagnostic(UnusedVariableDiagnostic(location, parameter.Identifier.ValueText));
     }
 
     private static bool IsLambdaParameterUsed(SyntaxNodeAnalysisContext context, ParameterSyntax parameter)
@@ -173,6 +165,17 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
             return true;
         }
 
+        var identifiers = GetIdentifiersForLambda(parameter);
+
+        return identifiers.Any(identifier =>
+        {
+            var identifierSymbol = context.SemanticModel.GetSymbolInfo(identifier).Symbol;
+            return SymbolEqualityComparer.Default.Equals(parameterSymbol, identifierSymbol);
+        });
+    }
+
+    private static IEnumerable<IdentifierNameSyntax> GetIdentifiersForLambda(ParameterSyntax parameter)
+    {
         var syntaxNode = parameter.FirstAncestorOrSelf<LambdaExpressionSyntax>() switch
         {
             { Body: var b } when b is not null => b,
@@ -182,21 +185,9 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
 
         if (syntaxNode is null)
         {
-            return true;
+            return [];
         }
 
-        var identifiers = syntaxNode.DescendantNodes().OfType<IdentifierNameSyntax>();
-
-        foreach (var identifier in identifiers)
-        {
-            var identifierSymbol = context.SemanticModel.GetSymbolInfo(identifier).Symbol;
-
-            if (SymbolEqualityComparer.Default.Equals(parameterSymbol, identifierSymbol))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return syntaxNode.DescendantNodes().OfType<IdentifierNameSyntax>();
     }
 }
