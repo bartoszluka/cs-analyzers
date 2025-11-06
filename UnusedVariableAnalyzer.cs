@@ -87,7 +87,12 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
 
     private static bool IsUsed(SyntaxNodeAnalysisContext context, VariableDeclaratorSyntax variable)
     {
-        var scope = variable.FirstAncestorOrSelf<BlockSyntax>();
+        foreach (var node in variable.AncestorsAndSelf())
+        {
+            // context.ReportDiagnostic(UnusedVariableDiagnostic(node.GetLocation(), node.GetType().FullName));
+        }
+
+        var scope = GetParentScope(variable);
         if (scope is null)
         {
             return true;
@@ -119,6 +124,18 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
             var identifierSymbol = context.SemanticModel.GetSymbolInfo(identifier).Symbol;
             return SymbolEqualityComparer.Default.Equals(variableSymbol, identifierSymbol);
         });
+    }
+
+    private static SyntaxNode GetParentScope(VariableDeclaratorSyntax variable)
+    {
+        var scope = variable.FirstAncestorOrSelf<BlockSyntax>();
+        if (scope is not null)
+        {
+            return scope;
+        }
+
+        // this is for top-level statements
+        return variable.FirstAncestorOrSelf<CompilationUnitSyntax>();
     }
 
     private static void ReportUnusedVariablesInParenthesizedLambdas(SyntaxNodeAnalysisContext context)
@@ -165,6 +182,12 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
             return true;
         }
 
+        if (parameterSymbol.Name == "_")
+        {
+            // don't report if it's a discard symbol
+            return true;
+        }
+
         var identifiers = GetIdentifiersForLambda(parameter);
 
         return identifiers.Any(identifier =>
@@ -176,18 +199,13 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
 
     private static IEnumerable<IdentifierNameSyntax> GetIdentifiersForLambda(ParameterSyntax parameter)
     {
-        var syntaxNode = parameter.FirstAncestorOrSelf<LambdaExpressionSyntax>() switch
-        {
-            { Body: var b } when b is not null => b,
-            { ExpressionBody: var e } when e is not null => e,
-            _ => null,
-        };
+        var body = parameter.FirstAncestorOrSelf<AnonymousFunctionExpressionSyntax>()?.Body;
 
-        if (syntaxNode is null)
+        if (body is null)
         {
             return [];
         }
 
-        return syntaxNode.DescendantNodes().OfType<IdentifierNameSyntax>();
+        return body.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>();
     }
 }

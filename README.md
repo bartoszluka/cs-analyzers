@@ -30,10 +30,11 @@ This project is meant to fix this.
 
 ## How to use it?
 
-There are 2 main ways of installing and using this analyzer, depending on what type of project you're working on:
+There are 3 ways of installing and using this analyzer, depending on what type of project you're working on:
 
 - the simple, single project one
 - central package management with `.props` files
+- vendor in the package and link it with `ProjectRefence`
 
 choose the approach that suits you best.
 
@@ -49,7 +50,7 @@ or add this to your `.csproj` file:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="MissingAnalyzers" Version="0.4.0" />
+  <PackageReference Include="MissingAnalyzers" Version="0.5.0" />
 </ItemGroup>
 ```
 
@@ -60,7 +61,7 @@ you can add this to the `Directory.Packages.props` file
 
 ```xml
 <ItemGroup>
-  <PackageVersion Include="MissingAnalyzers" Version="0.4.0" />
+  <PackageVersion Include="MissingAnalyzers" Version="0.5.0" />
 </ItemGroup>
 ```
 
@@ -72,6 +73,27 @@ and this to `Directory.Build.props` file
 </ItemGroup>
 ```
 
+### Vendor in and use `ProjectReference`
+
+You can clone this project, modify it if you need to, and use it as a project reference locally.
+To do this, first clone the repo
+
+```sh
+git pull https://github.com/bartoszluka/cs-analyzers MissingAnalyzers
+```
+
+then add it to the `.csproj`:
+
+```xml
+<ItemGroup>
+  <ProjectReference
+    Include="/path/to/MissingAnalyzers/MissingAnalyzers.csproj"
+    OutputItemType="Analyzer"
+    ReferenceOutputAssembly="false"
+  />
+</ItemGroup>
+```
+
 ### What's next?
 
 - [x] catch unused variables and report a compiler warning
@@ -79,5 +101,8 @@ and this to `Directory.Build.props` file
 - [x] fill `AnalyzerReleases.Shipped.md` (whatever those are)
 - [x] maybe support versions older than `net8.0`? `netstandard2.0` supported
 - [x] fix a bug with shadowing names in lambdas
+- [x] fix support for top-level statements
+- [x] fix a bug in identity lambdas `x => x`
+- [x] fix a bug where the explicitly ignored parameter `_` gets reported
 - [ ] add tests
 - [ ] add another analyzer if I see another problem
