@@ -87,11 +87,6 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
 
     private static bool IsUsed(SyntaxNodeAnalysisContext context, VariableDeclaratorSyntax variable)
     {
-        foreach (var node in variable.AncestorsAndSelf())
-        {
-            // context.ReportDiagnostic(UnusedVariableDiagnostic(node.GetLocation(), node.GetType().FullName));
-        }
-
         var scope = GetParentScope(variable);
         if (scope is null)
         {
@@ -134,8 +129,14 @@ public class UnusedVariableAnalyzer : DiagnosticAnalyzer
             return scope;
         }
 
-        // this is for top-level statements
-        return variable.FirstAncestorOrSelf<CompilationUnitSyntax>();
+        var unit = variable.FirstAncestorOrSelf<CompilationUnitSyntax>();
+        // check if its direct children are global statements, than it has to be a top-level `Program.cs` style file
+        if (unit.ChildNodes().Any(child => child is GlobalStatementSyntax))
+        {
+            return unit;
+        }
+
+        return null;
     }
 
     private static void ReportUnusedVariablesInParenthesizedLambdas(SyntaxNodeAnalysisContext context)

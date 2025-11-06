@@ -50,7 +50,7 @@ or add this to your `.csproj` file:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="MissingAnalyzers" Version="0.5.0" />
+  <PackageReference Include="MissingAnalyzers" Version="0.6.0" />
 </ItemGroup>
 ```
 
@@ -61,7 +61,7 @@ you can add this to the `Directory.Packages.props` file
 
 ```xml
 <ItemGroup>
-  <PackageVersion Include="MissingAnalyzers" Version="0.5.0" />
+  <PackageVersion Include="MissingAnalyzers" Version="0.6.0" />
 </ItemGroup>
 ```
 
